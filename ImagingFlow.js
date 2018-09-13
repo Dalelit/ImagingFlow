@@ -47,37 +47,6 @@ function addButtons(src, tgt)
     appendButton(displayDiv, 'experiment', function() {applyFilter(src, tgt, new experimentFilter());} );
 }
 
-function droppedImage(e)
-{
-    droppedEvent = e;
-    e.preventDefault();
-
-    if (e.dataTransfer.files.length === 0) return;
-    // console.log('Dropped. Files length is ' + e.dataTransfer.files.length);
-
-    rdr = new FileReader();
-    rdr.onload = function(re) {
-        // console.log('reader loaded');
-        img = new Image();
-        img.onload = function(e) {
-            dropCnvs.width = img.width;
-            dropCnvs.height = img.height;
-            dropCnvs.getContext('2d').drawImage(img, 0, 0);
-        }
-        // img.crossOrigin = 'anonymous';
-        img.src = re.target.result;
-    }
-    rdr.readAsDataURL(e.dataTransfer.files[0]);
-}
-
-function showImageOnCanvas(image, canvas)
-{
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const context = canvas.getContext('2d');
-    context.drawImage(image, 0, 0);
-}
-
 function appendNewCanvas(node)
 {
     cnvs = document.createElement('canvas');
@@ -95,7 +64,7 @@ function appendButton(node, name, func)
     btn.name = name;
     btn.onclick = function() {console.log('Starting '+name); func(); console.log('Done.')};
     node.append(btn);
-    // node.append(document.createElement('br'));
+    node.append(document.createElement('br'));
 }
 
 class baseFilter
