@@ -1,3 +1,9 @@
+/////////////////////////////////////////////////////////////////
+//
+// To Do
+// - test and work out the best way to scale the histogram height
+// - have the image stored separately to be used, so big pictures can be scaled down on a canvas to fit the screen
+
 function onLoadInitialise()
 {
     displayDiv = document.getElementById("displayArea");
@@ -7,13 +13,18 @@ function onLoadInitialise()
     dropCnvs.ondragover = function(e) {e.preventDefault();};
     dropCnvs.ondrop = function(e) { droppedImage(e, showHistogram); };
 
+    hgCanvas = null;
 }
 
 function showHistogram()
 {
     console.log('Show histogram');
 
-    hs = new histogram(dropCnvs, appendNewCanvas(displayDiv));
+    if (!hgCanvas)
+    {
+        hgCanvas = appendNewCanvas(displayDiv);
+    }
+    hs = new histogram(dropCnvs, hgCanvas);
 
     hs.analysis();
     hs.draw();
@@ -74,35 +85,62 @@ class histogram
             i++; // alpha ignore
         }
 
+        // convert them to percentage of total number of pixels
+        let pixCount = imgData.data.length / 4;
+        for (i = 0; i < 256; i++) this.red[i] /= pixCount;
+        for (i = 0; i < 256; i++) this.green[i] /= pixCount;
+        for (i = 0; i < 256; i++) this.blue[i] /= pixCount;
+        this.redMax /= pixCount;
+        this.greenMax /= pixCount;
+        this.blueMax /= pixCount;
+
+
+        this.redAvg = 0;
+        for (let i = 0; i < 256; i++) this.redAvg += this.red[i];
+        this.redAvg /= 256;
+
+        this.blueAvg = 0;
+        for (let i = 0; i < 256; i++) this.blueAvg += this.green[i];
+        this.blueAvg /= 256;
+
+        this.greenAvg = 0;
+        for (let i = 0; i < 256; i++) this.greenAvg += this.blue[i];
+        this.greenAvg /= 256;
+
         this.log();
     }
 
     log()
     {
-        console.log('Red. Max ' + this.redMax);
+        console.log('Red');
         console.log(this.red);
-        console.log('Green. Max ' + this.greenMax);
+        console.log('Green');
         console.log(this.green);
-        console.log('Blue. Max ' + this.blueMax);
+        console.log('Blue');
         console.log(this.blue);
+
+        console.log('Red. Max ' + this.redMax);
+        console.log("Red. Avg " + this.redAvg);
+        console.log('Green. Max ' + this.greenMax);
+        console.log("Green. Avg " + this.greenAvg);
+        console.log('Blue. Max ' + this.blueMax);
+        console.log("Blue. Avg " + this.blueAvg);
+
     }
 
     draw()
     {
         console.log('Historgram draw');
 
-        // work out the height scale
-        let maxValue = this.redMax;
-        if (this.greenMax > maxValue) maxValue = this.greenMax;
-        if (this.blueMax > maxValue) maxValue = this.blueMax;
-
-        if (maxValue > 1000) maxValue = 1000;
+        let maxValue = 0;
+        for (let i = 5; i < 251; i++) if (this.red[i] > maxValue) maxValue = this.red[i];
+        for (let i = 5; i < 251; i++) if (this.green[i] > maxValue) maxValue = this.green[i];
+        for (let i = 5; i < 251; i++) if (this.blue[i] > maxValue) maxValue = this.blue[i];
+        maxValue *= 1.1;
 
         let yscale = this.height / maxValue;
 
-        console.log('canvas ' + this.outputCanvas.width);
         let ctx = this.outputCanvas.getContext('2d');
-        console.log('tgt ctx ' + ctx.width);
 
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
@@ -111,6 +149,7 @@ class histogram
         ctx.translate(0, this.outputCanvas.height);
         ctx.scale(1,-1);
 
+        ////// draw the fill of each colour
         ctx.globalAlpha = 0.33;
 
         // // draw red
@@ -139,6 +178,46 @@ class histogram
             ctx.fillRect(x, 0, this.xscale, this.blue[i]*yscale);
             x += this.xscale;
         }
+
+        ////// draw the line across the top
+        ctx.globalAlpha = 1;
+
+        // // draw red
+        ctx.beginPath();
+        ctx.strokeStyle = 'red';
+        var x = 0;
+        ctx.moveTo(0, this.red[0]*yscale); // start the outline from the first position
+        for (var i = 1; i < 256; i++)
+        {
+            x += this.xscale;
+            ctx.lineTo(x, this.red[i]*yscale);
+        }
+        ctx.stroke();
+
+        // // draw green
+        ctx.beginPath();
+        ctx.strokeStyle = 'green';
+        var x = 0;
+        ctx.moveTo(0, this.green[0]*yscale); // start the outline from the first position
+        for (var i = 1; i < 256; i++)
+        {
+            x += this.xscale;
+            ctx.lineTo(x, this.green[i]*yscale);
+        }
+        ctx.stroke();
+
+        // // draw blue
+        ctx.beginPath();
+        ctx.strokeStyle = 'blue';
+        var x = 0;
+        ctx.moveTo(0, this.blue[0]*yscale); // start the outline from the first position
+        for (var i = 1; i < 256; i++)
+        {
+            x += this.xscale;
+            ctx.lineTo(x, this.blue[i]*yscale);
+        }
+        ctx.stroke();
+
     }
 }
 

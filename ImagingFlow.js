@@ -47,15 +47,6 @@ function addButtons(src, tgt)
     appendButton(displayDiv, 'experiment', function() {applyFilter(src, tgt, new experimentFilter());} );
 }
 
-function appendNewCanvas(node)
-{
-    cnvs = document.createElement('canvas');
-    cnvs.width = 100;
-    cnvs.height = 100;
-    node.append(cnvs);
-    return cnvs;
-}
-
 function appendButton(node, name, func)
 {
     btn = document.createElement('input');
