@@ -420,19 +420,34 @@ class edgeFilter extends baseFilter
     }
 }
 
-class experimentFilter extends vertFilter
+class experimentFilter extends baseFilter
 {
     constructor()
     {
         super();
-        this.data = [-1, -1, -1, -1, -1
-                     -1,  1,  1,  1, -1
-                     -1,  1,  2,  1, -1
-                     -1,  1,  1,  1, -1
-                     -1, -1, -1, -1, -1];
-        this.columns = 5;
-        this.rows = 5;
-        this.normalize();
+    }
+
+    arcsin(x)
+    {
+        // arcsin of 0-255
+        x  = ((x / 255) * 2.0) - 1.0; // change range to -1,1
+        let y = Math.asin(x); // answer range is -PI/2, PI/2
+        y = (y + Math.PI / 2.0) / Math.PI; // change answer range to 0,1
+        y = Math.floor(y * 255); // make it 0-255
+        return y;
+    }
+
+    apply(imgData, imgX, imgY)
+    {
+        // To Do - could be more efficient and not run the filter
+        let result = super.apply(imgData, imgX, imgY);
+
+        result[0] = this.arcsin(result[0]);
+        result[1] = this.arcsin(result[1]);
+        result[2] = this.arcsin(result[2]);
+        result[3] = 255;
+
+        return result;
     }
 }
 
